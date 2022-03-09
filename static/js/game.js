@@ -9,12 +9,12 @@ function get_pokemon() {
 }
 
 function make_type_card(types, section) {
-    console.log()
+    console.log(types)
     for (let type in types) {
         if (types[type] != "") {
-            if (!$("#" + section + " ." + types[type]).length) {
-                $("#"+section).append(`<div class="typebadge ${types[type]}">
-                ${types[type]}
+            if (!$("#" + section + " ." + types[type].toLowerCase()).length) {
+                $("#"+section).append(`<div class="typebadge ${types[type].toLowerCase()}">
+                ${types[type].toUpperCase()}
             </div>`);
             }
 
@@ -66,8 +66,8 @@ function try_word() {
                 //     alert("You are a Wiener!")
                 //     openWinModal();
                 // }
-                make_type_card(pk.types, "correctTypes")
-                make_type_card(pk.not_types, "guessedTypes")
+                make_type_card(pk.types, "correctTypes");
+                make_type_card(pk.not_types, "guessedTypes");
                 if (data.code ==2){
                     $("#thepkimg").attr("src", "static/gifs/"+pk.name.toLowerCase()+".gif");
                     $("#correctHeight").html("Height: "+pk.height+"m")

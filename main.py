@@ -116,11 +116,15 @@ def new_pokemon(gen=False):
     session["pokemon"] = pokemon_dict
     session["attempts"] = []
     
+    
     return pokemon_dict
 
 @app.route("/new")
 def new():
     new_pokemon(1)
+    if "complete" in session:
+        session.pop("complete")
+    session.pop("attempts")
     return redirect("/")
 
 @app.route('/guess_pokemon', methods=["POST"])
@@ -139,6 +143,7 @@ def guess_pokemon():
                 result = the_pokemon
                 result["types"] = [the_pokemon["type_one"], the_pokemon["type_two"]]
                 code = 2
+                session["complete"] = True
             elif 'attempts' in session:
                 attempts = session.get("attempts")
                 attempts.append(word)
@@ -163,6 +168,7 @@ def guess_pokemon():
         else:
             return jsonify(validated=False, text_back="Not a Valid Pokemon")
     else:
+        print("completed")
         text_back = "You have already completed this word"
     return jsonify(validated=False, text_back=text_back)
 

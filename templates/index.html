@@ -8,6 +8,7 @@
     <title>Document</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/smudge.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $SCRIPT_ROOT = {{ request.script_root | tojson }};
