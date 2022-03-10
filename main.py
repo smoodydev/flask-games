@@ -9,7 +9,7 @@ if os.path.exists("env.py"):
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("SQLALCHEMY_DATABASE_URI")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.secret_key = 'somesecret'
+app.secret_key = os.environ.get("SECRETKEY", "SomeSecret")
 
 
 db = SQLAlchemy(app)
@@ -46,15 +46,6 @@ class Pokemon(db.Model):
 
 
 
-
-@app.route('/test')
-def test():
-    test = "a"
-    pk =  get_pokemon(test)
-    if pk:
-        return pk.name
-    else:
-        return "Shit"
 
 
 def compare_pokemon(should, guess):
@@ -121,7 +112,7 @@ def new_pokemon(gen=False):
 
 @app.route("/new")
 def new():
-    new_pokemon(1)
+    new_pokemon(2)
     if "complete" in session:
         session.pop("complete")
     session.pop("attempts")
