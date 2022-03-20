@@ -8,6 +8,9 @@
     font-weight: 400;
     font-size: 15px;
 }
+button.typebadge {
+    height: 40px;
+}
 
 .normal{
     background-color: #807870;
@@ -21,8 +24,8 @@
 .grass{
     background-color: green;
 }
-.electirc{
-    background-color: yellow;
+.electric{
+    background-color: #F8D030;
 }
 .ice{
     background-color: rgb(72, 209, 255);

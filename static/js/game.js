@@ -24,6 +24,13 @@ function make_type_card(types, section) {
 
 }
 
+function make_attack_card(move, move_result){
+    return `<div class="c4 md1"><p>Used ${move_result.move_details[0]}</p>
+    <div class="effective effective-${move_result.val}">x${move_result.val}</div>
+    <div class="typebadge ${move_result.move_details[1]}">${move_result.move_details[1].toUpperCase()}
+    </div>`
+}
+
 function make_pokemon_card(the_pokemon) {
     let height, weight = "";
     if (the_pokemon.height[0]){
@@ -85,6 +92,22 @@ function try_word() {
         });
     }
 }
+
+$('.usemove').bind('click', function () {
+    $.post($SCRIPT_ROOT + '/use_move', {
+            move_slot: this.id
+        }, function (data) {
+            if (data.validated) {
+                move_result = data.result;
+                $("#guessedPokemon").append(make_attack_card(this.innerhtml, move_result));
+            }
+            else {
+                $("#result").text(data.text_back);
+            }
+        });
+    return false;
+});
+
 
 $('#enter').bind('click', function () {
     try_word();

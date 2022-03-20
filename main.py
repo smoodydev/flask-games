@@ -2,10 +2,13 @@ import os
 from flask import Flask, redirect, jsonify, render_template, request, flash, session
 from flask_sqlalchemy import SQLAlchemy
 import random
-import itertools
+from utils import weakness_check, compare_pokemon
+
+import csv
 
 if os.path.exists("env.py"):
     import env
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("SQLALCHEMY_DATABASE_URI")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -14,6 +17,9 @@ app.secret_key = os.environ.get("SECRETKEY", "SomeSecret")
 
 db = SQLAlchemy(app)
 
+
+
+# Pokemon Class
 class Pokemon(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     number = db.Column(db.Integer)
@@ -45,39 +51,50 @@ class Pokemon(db.Model):
         return as_dict
 
 
+moves = db.Table('moves',
+    db.Column('move_id', db.Integer, db.ForeignKey('move.id'), primary_key=True),
+    db.Column('partner_id', db.Integer, db.ForeignKey('partner.id'), primary_key=True)
+)  
 
-
-
-def compare_pokemon(should, guess):
-    # type_one_m = [should.type_one if should.type_one in {guess.type_one, guess.type_two}]
-    types = []
-    not_types = []
-    should_types = [should["type_one"], should["type_two"]]
-    if guess["type_one"] in should_types:
-        types.append(guess["type_one"])
-    else:
-        not_types.append(guess["type_one"])
-    if guess["type_two"] in should_types:
-        types.append(guess["type_two"])
-    else:
-        not_types.append(guess["type_two"])
+class Partner(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), unique=True, nullable=False)
+    tier = db.Column(db.Integer)
+    moves = db.relationship('Move', secondary=moves, lazy='subquery',
+      backref=db.backref('partners', lazy=True))
+    evolves_id = db.Column(db.Integer, nullable=True)
     
-    
-
-
-    height = [1, guess["height"]] if should["height"] > guess["height"] else [0,guess["height"]]
-    weight = [1, guess["weight"]] if should["weight"] > guess["weight"] else [0,guess["weight"]]
-
-    dict_back = {
-        "name": guess["name"], 
-        "types": types,
-        "not_types": not_types,
-        "height": height,
-        "weight": weight
+    def __init__(self, name, moves, tier, evolves_id):   
+        self.name = name
+        self.tier = tier
+        self.evolves_id = evolves_id
+        
+    def add_moves(self, moves_in):
+        for move in moves_in:
+            self.moves.append(Move.query.filter(Move.id==int(move)).first())
  
-    }
+  
+    def to_dict(self):
+        as_dict = {
+            "name": self.name,
+            "moves":self.moves,
+            "tier": self.tier,
+            "evolves_id": self.evolves_id,
+        }
+        return as_dict
 
-    return dict_back
+
+class Move(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), unique=True, nullable=False)
+    move_type = db.Column(db.String(80), unique=False, nullable=False)
+    
+    def __init__(self, name, move_type):   
+        self.name = name
+        self.move_type = move_type
+   
+
+
 
 def get_pokemon(pokemon):
     is_pokemon = Pokemon.query.filter(Pokemon.name==pokemon).first()
@@ -109,6 +126,31 @@ def new_pokemon(gen=False):
     
     
     return pokemon_dict
+
+@app.route("/picknew")
+def start_new():
+    partners = Partner.query.filter(Partner.tier==0)
+    return render_template("picknew.html", partners=partners)
+
+@app.route("/selectpartner/<partner_id>")
+def selectpartner(partner_id):
+
+    selected_partner = Partner.query.get(partner_id)
+    pokemon = selected_partner.to_dict()
+    if pokemon["tier"]==0:
+        partner_dict = {
+            "name": pokemon["name"],
+            "tier": pokemon["tier"],
+            "moves": []
+        }
+
+        for x in pokemon["moves"]:
+            partner_dict["moves"].append([x.name, x.move_type])
+        
+        session["partner"] = partner_dict
+    
+    return session["partner"]
+
 
 @app.route("/new")
 def new():
@@ -163,11 +205,31 @@ def guess_pokemon():
         text_back = "You have already completed this word"
     return jsonify(validated=False, text_back=text_back)
 
+@app.route('/use_move', methods=["POST"])
+def use_move():
+    move_slot = request.form["move_slot"]
+    try:
+        attack_type = session["partner"]["moves"][int(move_slot)]
+        print(attack_type)
+        pokemon = session["pokemon"]
+
+        effectiveness = weakness_check([pokemon["type_one"], pokemon["type_two"]], attack_type)
+        result = {
+            "move_details": attack_type,
+            "val": effectiveness
+        }
+        return jsonify(validated=True, result=result)
+    except:
+        return jsonify(validated=False, text_back="Something unclear happened")
+
 
 @app.route('/')
 def index():
-    if not all([key in session for key in ["pokemon", "attempts"]]):
+    if not all([key in session for key in ["pokemon", "attempts", "partner"]]):
+        print("SHEEE")
         new_pokemon(1)
+        if "partner" not in session:
+            return redirect("picknew")
         
     pokemon = "pokemon"
 
@@ -175,9 +237,16 @@ def index():
     return render_template("index.html", pokemon=pokemon)
 
 
+@app.route('/data')
+def data():
+    moves = Move.query.all()
+    partners = Partner.query.all()
+    return render_template("aaa.html", moves=moves, partners=partners)
+
+
 
 if __name__ == '__main__':
-    # db.create_all()
+    db.create_all()
     app.run(host=os.environ.get('IP', "0.0.0.0"),
             port=int(os.environ.get('PORT', 5000)),
-            debug=False)
+            debug=True)
