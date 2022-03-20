@@ -3,7 +3,6 @@ from flask import Flask, redirect, jsonify, render_template, request, flash, ses
 from flask_sqlalchemy import SQLAlchemy
 import random
 from utils import weakness_check, compare_pokemon
-
 import csv
 
 if os.path.exists("env.py"):
@@ -95,7 +94,6 @@ class Move(db.Model):
    
 
 
-
 def get_pokemon(pokemon):
     is_pokemon = Pokemon.query.filter(Pokemon.name==pokemon).first()
     if (is_pokemon):
@@ -149,7 +147,7 @@ def selectpartner(partner_id):
         
         session["partner"] = partner_dict
     
-    return session["partner"]
+    return redirect("/")
 
 
 @app.route("/new")
