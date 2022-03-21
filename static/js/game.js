@@ -1,6 +1,6 @@
 function get_pokemon() {
     let the_pokemon = $(`#pokemon_entered`).val().toLowerCase();
-    console.log(the_pokemon);
+   
     if (pokemonNames.includes(the_pokemon)) {
         return the_pokemon;
     }
@@ -9,7 +9,7 @@ function get_pokemon() {
 }
 
 function make_type_card(types, section) {
-    console.log(types)
+  
     for (let type in types) {
         if (types[type] != "") {
             if (!$("#" + section + " ." + types[type].toLowerCase()).length) {
@@ -34,19 +34,34 @@ function make_attack_card(move, move_result){
 function make_pokemon_card(the_pokemon) {
     let height, weight = "";
     if (the_pokemon.height[0]){
-        height = "Taller"
-        $("#tallerThan").html(the_pokemon.height[1]+"m < ")
-
+        height = "Taller";
+        if (the_pokemon.height[1] > $("#tallerThan").text()){
+            min_height = the_pokemon.height[1];
+            $("#tallerThan").html(the_pokemon.height[1])
+        }
+       
+        
     }else{
         height = "Shorter"
-        $("#shorterThan").html(" > " +the_pokemon.height[1]+"m")
+        if (the_pokemon.height[1] < $("#shorterThan").text()){
+            max_height = the_pokemon.height[1];
+            $("#shorterThan").html(the_pokemon.height[1])
+        }
+   
+        
     }
+    
     if (the_pokemon.weight[0]){
         weight = "Heavier"
-        $("#heavierThan").html(the_pokemon.weight[1]+"kg < ")
+        if (the_pokemon.weight[1] < $("#heavierThan").text()){
+            $("#heavierThan").html(the_pokemon.weight[1]);
+        }
     }else{
         weight = "Lighter"
-        $("#lighterThan").html(" > " +the_pokemon.weight[1]+" kg")
+        if (the_pokemon.weight[1] < $("#lighterThan").text()){
+            $("#lighterThan").html(the_pokemon.weight[1]);
+        }
+        
     }
     return `
     <div class="c4 md1">
@@ -79,6 +94,7 @@ function try_word() {
                     $("#thepkimg").attr("src", "static/gifs/"+pk.name.toLowerCase()+".gif");
                     $("#correctHeight").html("Height: "+pk.height+"m")
                     $("#correctWeight").html("Weight: "+pk.weight+"kg")
+                    
                 }
                 else{
                     $("#guessedPokemon").append(make_pokemon_card(pk));
